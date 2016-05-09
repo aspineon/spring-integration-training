@@ -4,7 +4,17 @@
        xmlns:integration="http://www.springframework.org/schema/integration"
        xmlns:http="http://www.springframework.org/schema/integration/http"
        xmlns:stream="http://www.springframework.org/schema/integration/stream"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd http://www.springframework.org/schema/integration/http http://www.springframework.org/schema/integration/http/spring-integration-http.xsd http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream.xsd">
+       xmlns:xml-int="http://www.springframework.org/schema/integration/xml"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd http://www.springframework.org/schema/integration/http http://www.springframework.org/schema/integration/http/spring-integration-http.xsd http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream.xsd http://www.springframework.org/schema/integration/xml http://www.springframework.org/schema/integration/xml/spring-integration-xml.xsd">
+
+    <bean id="unmarshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+        <property name="classesToBeBound">
+            <list>
+                <value>pl.training.integration.lab03.Entry</value>
+                <value>pl.training.integration.lab03.ExchangeRates</value>
+            </list>
+        </property>
+    </bean>
 
     <integration:gateway id="nbp" service-interface="pl.training.integration.lab03.NbpGateway"
                          default-request-channel="request"/>
@@ -21,6 +31,7 @@
 
     <integration:chain input-channel="response">
         <integration:transformer expression="payload.replaceAll(',','.')"/>
+        <xml-int:unmarshalling-transformer unmarshaller="unmarshaller"/>
         <stream:stdout-channel-adapter/>
     </integration:chain>
 
