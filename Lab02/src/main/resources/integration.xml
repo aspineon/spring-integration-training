@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:file="http://www.springframework.org/schema/integration/file"
+       xmlns:integration="http://www.springframework.org/schema/integration"
+       xmlns:xml-int="http://www.springframework.org/schema/integration/xml"
+       xmlns:stream="http://www.springframework.org/schema/integration/stream"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/integration/file http://www.springframework.org/schema/integration/file/spring-integration-file.xsd http://www.springframework.org/schema/integration/xml http://www.springframework.org/schema/integration/xml/spring-integration-xml.xsd http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream.xsd">
+
+    <bean id="fileSelector" class="pl.training.integration.lab02.FileSelector">
+        <constructor-arg name="fileNameStart" value="shiporder"/>
+    </bean>
+
+    <bean id="unmarshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+        <!--<property name="contextPath" value="pl.training.integration.lab02"/>-->
+        <property name="classesToBeBound">
+            <list>
+                <value>pl.training.integration.lab02.Shiporder</value>
+            </list>
+        </property>
+    </bean>
+
+    <xml-int:xpath-expression id="countrySelector" expression="//country='Norway'"/>
+
+    <file:inbound-channel-adapter directory="file:c:\\input" channel="files">
+        <integration:poller fixed-rate="1000"/>
+    </file:inbound-channel-adapter>
+
+    <integration:chain input-channel="files" output-channel="shipOrders">
+        <integration:filter ref="fileSelector"/>
+        <file:file-to-string-transformer charset="UTF-8"/>
+        <xml-int:validating-filter schema-location="shiporder.xsd"/>
+        <xml-int:xpath-filter xpath-expression-ref="countrySelector"/>
+        <integration:transformer expression="payload.replaceAll('Norway', 'Poland')"/>
+    </integration:chain>
+
+    <integration:recipient-list-router input-channel="shipOrders">
+        <integration:recipient channel="shipOrdersFiles"/>
+        <integration:recipient channel="shipOrdersObjects"/>
+    </integration:recipient-list-router>
+
+    <file:outbound-channel-adapter directory="file:c:\\output" channel="shipOrdersFiles"/>
+
+    <integration:chain input-channel="shipOrdersObjects">
+        <xml-int:unmarshalling-transformer unmarshaller="unmarshaller"/>
+        <stream:stdout-channel-adapter append-newline="true"/>
+    </integration:chain>
+
+    <integration:channel id="files"/>
+    <integration:channel id="shipOrders"/>
+    <integration:channel id="shipOrdersFiles"/>
+    <integration:channel id="shipOrdersObjects"/>
+
+    <integration:wire-tap channel="logs" pattern="*"/>
+    <integration:logging-channel-adapter id="logs" level="INFO" log-full-message="true"/>
+
+</beans>
