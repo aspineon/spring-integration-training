@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:integration="http://www.springframework.org/schema/integration"
+       xmlns:http="http://www.springframework.org/schema/integration/http"
+       xmlns:stream="http://www.springframework.org/schema/integration/stream"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd http://www.springframework.org/schema/integration/http http://www.springframework.org/schema/integration/http/spring-integration-http.xsd http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream.xsd">
+
+    <integration:gateway id="nbp" service-interface="pl.training.integration.lab03.NbpGateway"
+                         default-request-channel="request"/>
+
+    <integration:channel id="request"/>
+
+    <http:outbound-gateway url="http://www.nbp.pl/kursy/xml/a088z160509.xml"
+                           http-method="GET"
+                           expected-response-type="java.lang.String"
+                           request-channel="request"
+                           reply-channel="response"/>
+
+    <integration:channel id="response"/>
+
+    <integration:chain input-channel="response">
+        <integration:transformer expression="payload.replaceAll(',','.')"/>
+        <stream:stdout-channel-adapter/>
+    </integration:chain>
+
+</beans>
