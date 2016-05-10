@@ -20,9 +20,9 @@
         <property name="physicalName" value="entries"/>
     </bean>
 
-    <jms:inbound-channel-adapter channel="entries" destination="entriesQueue" connection-factory="jmsConnectionFactory"/>
+    <jms:inbound-channel-adapter channel="entries" destination="entriesQueue" connection-factory="jmsConnectionFactory" />
 
-    <integration:poller fixed-rate="1000" default="true"/>
+    <integration:poller fixed-rate="1000" default="true" max-messages-per-poll="10"/>
 
     <integration:channel id="entries"/>
 
