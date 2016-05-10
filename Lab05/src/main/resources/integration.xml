@@ -5,7 +5,8 @@
        xmlns:http="http://www.springframework.org/schema/integration/http"
        xmlns:jdbc="http://www.springframework.org/schema/jdbc"
        xmlns:jdbc-int="http://www.springframework.org/schema/integration/jdbc"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd http://www.springframework.org/schema/integration/http http://www.springframework.org/schema/integration/http/spring-integration-http.xsd http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd http://www.springframework.org/schema/integration/jdbc http://www.springframework.org/schema/integration/jdbc/spring-integration-jdbc.xsd">
+       xmlns:file="http://www.springframework.org/schema/integration/file"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd http://www.springframework.org/schema/integration/http http://www.springframework.org/schema/integration/http/spring-integration-http.xsd http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd http://www.springframework.org/schema/integration/jdbc http://www.springframework.org/schema/integration/jdbc/spring-integration-jdbc.xsd http://www.springframework.org/schema/integration/file http://www.springframework.org/schema/integration/file/spring-integration-file.xsd">
 
     <integration:gateway id="cafeGateway" service-interface="pl.training.integration.lab05.Cafe" default-request-channel="orders"/>
 
@@ -61,7 +62,20 @@
     <integration:chain input-channel="orderItems">
         <integration:object-to-map-transformer/>
         <jdbc-int:outbound-channel-adapter data-source="dataSource"
-           query="insert into items (coffeeType,iced) values(:payload[coffeeType],:payload[iced])"/>
+           query="insert into items (coffeeType,iced) values(:payload[type],:payload[iced])"/>
+    </integration:chain>
+
+    <jdbc-int:inbound-channel-adapter data-source="dataSource" query="select * from items" channel="itemsToSave">
+        <integration:poller fixed-rate="5000"/>
+    </jdbc-int:inbound-channel-adapter>
+
+    <integration:channel id="itemsToSave"/>
+
+    <integration:chain input-channel="itemsToSave">
+        <integration:splitter/>
+        <integration:object-to-string-transformer/>
+        <file:outbound-channel-adapter directory="file:c:\\output" filename-generator-expression="'data.txt'"
+                                       mode="APPEND" append-new-line="true"/>
     </integration:chain>
 
 </beans>
