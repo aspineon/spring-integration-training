@@ -2,13 +2,14 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:integration="http://www.springframework.org/schema/integration"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd">
+       xmlns:http="http://www.springframework.org/schema/integration/http"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd http://www.springframework.org/schema/integration/http http://www.springframework.org/schema/integration/http/spring-integration-http.xsd">
 
-    <integration:gateway service-interface="pl.training.integration.lab05.Cafe" default-request-channel="orders"/>
+    <integration:gateway id="cafeGateway" service-interface="pl.training.integration.lab05.Cafe" default-request-channel="orders"/>
 
     <integration:channel id="orders"/>
 
-    <integration:splitter input-channel="orders" output-channel="orderItems" expression="payload.orderItems"/>
+    <integration:splitter id="ordersSplitter" input-channel="orders" output-channel="orderItems" expression="payload.orderItems"/>
 
     <integration:publish-subscribe-channel id="orderItems"/>
 
@@ -36,6 +37,21 @@
     <integration:channel id="preparedOrders"/>
 
     <integration:service-activator input-channel="preparedOrders" output-channel="nullChannel" ref="waiter" method="serve"/>
+
+    <integration:message-history tracked-components="*"/>
+    <integration:wire-tap channel="logs"/>
+    <integration:logging-channel-adapter id="logs" log-full-message="true" level="INFO"/>
+
+
+    <integration:inbound-channel-adapter channel="requestNewOrder" expression="''">
+        <integration:poller fixed-rate="500" max-messages-per-poll="100"/>
+    </integration:inbound-channel-adapter>
+
+    <integration:channel id="requestNewOrder"/>
+
+    <http:outbound-gateway request-channel="requestNewOrder" reply-channel="orders"
+                           url="http://localhost:8080/api/orders" http-method="GET"
+                           expected-response-type="pl.training.integration.lab05.model.Order" />
 
 </beans>
 
