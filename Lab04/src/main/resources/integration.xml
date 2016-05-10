@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:http="http://www.springframework.org/schema/integration/http"
+       xmlns:jms="http://www.springframework.org/schema/integration/jms"
+       xmlns:integration="http://www.springframework.org/schema/integration"
+       xmlns:stream="http://www.springframework.org/schema/integration/stream"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd   http://www.springframework.org/schema/integration/http http://www.springframework.org/schema/integration/http/spring-integration-http.xsd http://www.springframework.org/schema/integration/jms http://www.springframework.org/schema/integration/jms/spring-integration-jms.xsd http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream.xsd">
+
+    <bean id="jmsConnectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">
+        <property name="targetConnectionFactory">
+            <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+                <property name="brokerURL" value="tcp://localhost:61616"/>
+                <property name="trustAllPackages" value="true"/>
+            </bean>
+        </property>
+    </bean>
+
+    <bean id="entriesQueue" class="org.apache.activemq.command.ActiveMQQueue">
+        <property name="physicalName" value="entries"/>
+    </bean>
+
+    <jms:inbound-channel-adapter channel="entries" destination="entriesQueue" connection-factory="jmsConnectionFactory"/>
+
+    <integration:poller fixed-rate="1000" default="true"/>
+
+    <integration:channel id="entries"/>
+
+    <stream:stdout-channel-adapter channel="entries" append-newline="true"/>
+
+</beans>
+
+
+
+
+
+
+
+
+
+
+
