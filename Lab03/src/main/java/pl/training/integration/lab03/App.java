@@ -10,7 +10,8 @@ public class App {
     public static void main(String[] args) throws InterruptedException {
         try (ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("beans.xml", "integration.xml")) {
             NbpGateway nbp = applicationContext.getBean(NbpGateway.class);
-            nbp.refreshExchangeRates(REQUEST_ID);
+            ExchangeRates exchangeRates = nbp.refreshExchangeRates(REQUEST_ID);
+            System.out.println("#### " + exchangeRates);
             Thread.sleep(SLEEP_TIME);
         }
     }

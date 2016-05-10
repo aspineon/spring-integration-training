@@ -20,9 +20,10 @@
     <bean id="idGenerator" class="pl.training.integration.lab03.IdGenerator"/>
 
     <integration:gateway id="nbp" service-interface="pl.training.integration.lab03.NbpGateway"
-                         default-request-channel="request"/>
+                         default-request-channel="request" default-reply-channel="exchangeRates"/>
 
     <integration:channel id="request"/>
+    <integration:channel id="result"/>
 
     <http:outbound-gateway url="http://www.nbp.pl/kursy/xml/a088z160509.xml"
                            http-method="GET"
@@ -32,9 +33,14 @@
 
     <integration:channel id="response"/>
 
-    <integration:chain input-channel="response" output-channel="entries">
+    <integration:chain input-channel="response" output-channel="exchangeRates">
         <integration:transformer expression="payload.replaceAll(',','.')"/>
         <xml-int:unmarshalling-transformer unmarshaller="unmarshaller"/>
+    </integration:chain>
+
+    <integration:publish-subscribe-channel id="exchangeRates"/>
+
+    <integration:chain input-channel="exchangeRates" output-channel="entries">
         <integration:splitter expression="payload.entries"/>
         <integration:header-enricher>
             <integration:header name="entryId" ref="idGenerator" method="getNext"/>

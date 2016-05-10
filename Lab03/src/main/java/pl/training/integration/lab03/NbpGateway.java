@@ -2,6 +2,6 @@ package pl.training.integration.lab03;
 
 public interface NbpGateway {
 
-    void refreshExchangeRates(long requestId);
+    ExchangeRates refreshExchangeRates(long requestId);
 
 }
