@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:integration="http://www.springframework.org/schema/integration"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd">
+
+    <integration:gateway service-interface="pl.training.integration.lab05.Cafe" default-request-channel="orders"/>
+
+    <integration:channel id="orders"/>
+
+    <integration:splitter input-channel="orders" output-channel="orderItems" expression="payload.orderItems"/>
+
+    <integration:publish-subscribe-channel id="orderItems"/>
+
+    <integration:router input-channel="orderItems" expression="payload.iced ? 'icedCoffees' : 'hotCoffees'"/>
+
+    <integration:channel id="hotCoffees">
+        <integration:queue/>
+    </integration:channel>
+    <integration:channel id="icedCoffees">
+        <integration:queue/>
+    </integration:channel>
+
+    <integration:service-activator input-channel="hotCoffees" output-channel="delivery" ref="hotCoffeeBarista" method="prepare">
+        <integration:poller fixed-rate="1000"/>
+    </integration:service-activator>
+
+    <integration:service-activator input-channel="icedCoffees" output-channel="delivery" ref="icedCoffeeBarista" method="prepare">
+        <integration:poller fixed-rate="1000"/>
+    </integration:service-activator>
+
+    <integration:channel id="delivery"/>
+
+    <integration:aggregator input-channel="delivery" output-channel="preparedOrders"/>
+
+    <integration:channel id="preparedOrders"/>
+
+    <integration:service-activator input-channel="preparedOrders" output-channel="nullChannel" ref="waiter" method="serve"/>
+
+</beans>
+
+
+
+
+
+
+
+
+
+
+
