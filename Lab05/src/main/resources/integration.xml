@@ -3,7 +3,9 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:integration="http://www.springframework.org/schema/integration"
        xmlns:http="http://www.springframework.org/schema/integration/http"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd http://www.springframework.org/schema/integration/http http://www.springframework.org/schema/integration/http/spring-integration-http.xsd">
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xmlns:jdbc-int="http://www.springframework.org/schema/integration/jdbc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd http://www.springframework.org/schema/integration/http http://www.springframework.org/schema/integration/http/spring-integration-http.xsd http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd http://www.springframework.org/schema/integration/jdbc http://www.springframework.org/schema/integration/jdbc/spring-integration-jdbc.xsd">
 
     <integration:gateway id="cafeGateway" service-interface="pl.training.integration.lab05.Cafe" default-request-channel="orders"/>
 
@@ -42,7 +44,6 @@
     <integration:wire-tap channel="logs"/>
     <integration:logging-channel-adapter id="logs" log-full-message="true" level="INFO"/>
 
-
     <integration:inbound-channel-adapter channel="requestNewOrder" expression="''">
         <integration:poller fixed-rate="500" max-messages-per-poll="100"/>
     </integration:inbound-channel-adapter>
@@ -52,6 +53,16 @@
     <http:outbound-gateway request-channel="requestNewOrder" reply-channel="orders"
                            url="http://localhost:8080/api/orders" http-method="GET"
                            expected-response-type="pl.training.integration.lab05.model.Order" />
+
+    <jdbc:embedded-database id="dataSource" type="H2">
+        <jdbc:script location="import.sql"/>
+    </jdbc:embedded-database>
+
+    <integration:chain input-channel="orderItems">
+        <integration:object-to-map-transformer/>
+        <jdbc-int:outbound-channel-adapter data-source="dataSource"
+           query="insert into items (coffeeType,iced) values(:payload[coffeeType],:payload[iced])"/>
+    </integration:chain>
 
 </beans>
 
