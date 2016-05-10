@@ -4,10 +4,11 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import java.io.Serializable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType
-public class Entry {
+public class Entry implements Serializable {
 
     private Long id;
     @XmlElement(name = "nazwa_waluty")
@@ -16,6 +17,10 @@ public class Entry {
     private String code;
     @XmlElement(name = "kurs_sredni")
     private double value;
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public Long getId() {
         return id;
