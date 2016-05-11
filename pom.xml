@@ -16,6 +16,7 @@
         <module>Lab04</module>
         <module>Lab05</module>
         <module>Orders</module>
+        <module>Lab06</module>
     </modules>
 
     <properties>
